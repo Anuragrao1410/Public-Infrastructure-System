@@ -4,16 +4,32 @@ import Navbar from "../components/Navbar";
 
 function AdminDashboard() {
     const [issues, setIssues] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [updatingId, setUpdatingId] = useState(null);
 
     const fetchIssues = async () => {
+        setLoading(true);
+
+        window.dispatchEvent(
+            new Event("app-loading-start")
+        );
+
         try {
             const response = await axios.get(
-                "http://localhost:5000/api/issues"
+                `${import.meta.env.VITE_API_URL}/api/issues`
             );
 
             setIssues(response.data);
+
         } catch (error) {
-            console.log(error);
+            console.log("ADMIN ISSUES ERROR:", error);
+
+        } finally {
+            setLoading(false);
+
+            window.dispatchEvent(
+                new Event("app-loading-stop")
+            );
         }
     };
 
@@ -22,20 +38,33 @@ function AdminDashboard() {
     }, []);
 
     const updateStatus = async (id, status) => {
+        setUpdatingId(id);
+
+        window.dispatchEvent(
+            new Event("app-loading-start")
+        );
+
         try {
             await axios.put(
-                `http://localhost:5000/api/issues/${id}/status`,
+                `${import.meta.env.VITE_API_URL}/api/issues/${id}/status`,
                 { status }
             );
 
             alert("Status updated successfully");
 
-            fetchIssues();
+            await fetchIssues();
 
         } catch (error) {
             alert(
                 error.response?.data?.message ||
                 "Status update failed"
+            );
+
+        } finally {
+            setUpdatingId(null);
+
+            window.dispatchEvent(
+                new Event("app-loading-stop")
             );
         }
     };
@@ -50,7 +79,15 @@ function AdminDashboard() {
 
                 <h2>Reported Issues</h2>
 
-                {issues.length === 0 ? (
+                {loading ? (
+                    <p style={{
+                        textAlign: "center",
+                        marginTop: "30px",
+                        color: "#555"
+                    }}>
+                        Loading reported issues...
+                    </p>
+                ) : issues.length === 0 ? (
                     <p>No issues reported.</p>
                 ) : (
                     issues.map((issue) => (
@@ -87,8 +124,11 @@ function AdminDashboard() {
                                         "In Progress"
                                     )
                                 }
+                                disabled={updatingId === issue._id}
                             >
-                                In Progress
+                                {updatingId === issue._id
+                                    ? "Updating..."
+                                    : "In Progress"}
                             </button>
 
                             <button
@@ -98,9 +138,13 @@ function AdminDashboard() {
                                         "Resolved"
                                     )
                                 }
+                                disabled={updatingId === issue._id}
                             >
-                                Resolved
+                                {updatingId === issue._id
+                                    ? "Updating..."
+                                    : "Resolved"}
                             </button>
+
                         </div>
                     ))
                 )}

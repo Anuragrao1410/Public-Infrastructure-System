@@ -4,12 +4,19 @@ import Navbar from "../components/Navbar";
 
 function MyIssues() {
     const [issues, setIssues] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchIssues = async () => {
+            setLoading(true);
+
+            window.dispatchEvent(
+                new Event("app-loading-start")
+            );
+
             try {
                 const response = await axios.get(
-                    "http://localhost:5000/api/issues"
+                    `${import.meta.env.VITE_API_URL}/api/issues`
                 );
 
                 const user = JSON.parse(
@@ -24,7 +31,14 @@ function MyIssues() {
                 setIssues(myIssues);
 
             } catch (error) {
-                console.log(error);
+                console.log("MY ISSUES ERROR:", error);
+
+            } finally {
+                setLoading(false);
+
+                window.dispatchEvent(
+                    new Event("app-loading-stop")
+                );
             }
         };
 
@@ -36,13 +50,23 @@ function MyIssues() {
             <Navbar />
 
             <div className="dashboard">
+
                 <h1>My Reported Issues</h1>
 
-                {issues.length === 0 ? (
+                {loading ? (
+                    <p style={{
+                        textAlign: "center",
+                        marginTop: "30px",
+                        color: "#555"
+                    }}>
+                        Loading your reported issues...
+                    </p>
+                ) : issues.length === 0 ? (
                     <p>No issues reported yet.</p>
                 ) : (
                     issues.map((issue) => (
                         <div key={issue._id}>
+
                             <h3>{issue.title}</h3>
 
                             <p>
@@ -58,9 +82,11 @@ function MyIssues() {
                             </p>
 
                             <hr />
+
                         </div>
                     ))
                 )}
+
             </div>
         </>
     );

@@ -8,12 +8,14 @@ import MyIssues from "./pages/MyIssues";
 import AdminDashboard from "./pages/AdminDashboard";
 import EntrepreneurRegister from "./pages/EntrepreneurRegister";
 import EntrepreneurProfile from "./pages/EntrepreneurProfile";
-
+import LoadingBar from "./components/LoadingBar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
     return (
         <BrowserRouter>
+        <LoadingBar />
+        
             <Routes>
 
                 <Route

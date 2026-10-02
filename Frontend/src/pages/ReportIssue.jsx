@@ -10,20 +10,41 @@ function ReportIssue() {
     const [latitude, setLatitude] = useState("");
     const [longitude, setLongitude] = useState("");
 
+    const [loading, setLoading] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
+
     const getLocation = () => {
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser.");
             return;
         }
 
+        setLocationLoading(true);
+
+        window.dispatchEvent(
+            new Event("app-loading-start")
+        );
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLatitude(position.coords.latitude);
                 setLongitude(position.coords.longitude);
 
+                setLocationLoading(false);
+
+                window.dispatchEvent(
+                    new Event("app-loading-stop")
+                );
+
                 alert("Location fetched successfully!");
             },
             (error) => {
+                setLocationLoading(false);
+
+                window.dispatchEvent(
+                    new Event("app-loading-stop")
+                );
+
                 alert(
                     "Unable to get location: " +
                     error.message
@@ -35,15 +56,25 @@ function ReportIssue() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const user = JSON.parse(localStorage.getItem("user"));
+        const user = JSON.parse(
+            localStorage.getItem("user")
+        );
 
         if (!user) {
             alert("Please login first.");
             return;
         }
 
-        if (!title || !category || !description || !latitude || !longitude) {
-            alert("Please fill all fields and get your current location.");
+        if (
+            !title ||
+            !category ||
+            !description ||
+            !latitude ||
+            !longitude
+        ) {
+            alert(
+                "Please fill all fields and get your current location."
+            );
             return;
         }
 
@@ -60,14 +91,20 @@ function ReportIssue() {
             formData.append("image", image);
         }
 
+        setLoading(true);
+
+        window.dispatchEvent(
+            new Event("app-loading-start")
+        );
+
         try {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/issues`,
                 formData,
                 {
                     headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+                        "Content-Type": "multipart/form-data"
+                    }
                 }
             );
 
@@ -79,7 +116,7 @@ function ReportIssue() {
             setImage(null);
             setLatitude("");
             setLongitude("");
-            
+
         } catch (error) {
             console.log("ISSUE ERROR:", error);
             console.log("RESPONSE:", error.response);
@@ -87,8 +124,15 @@ function ReportIssue() {
 
             alert(
                 error.response?.data?.message ||
-                    error.message ||
-                    "Issue submission failed"
+                error.message ||
+                "Issue submission failed"
+            );
+
+        } finally {
+            setLoading(false);
+
+            window.dispatchEvent(
+                new Event("app-loading-stop")
             );
         }
     };
@@ -111,6 +155,7 @@ function ReportIssue() {
                             onChange={(e) =>
                                 setTitle(e.target.value)
                             }
+                            disabled={loading}
                             required
                         />
 
@@ -119,6 +164,7 @@ function ReportIssue() {
                             onChange={(e) =>
                                 setCategory(e.target.value)
                             }
+                            disabled={loading}
                             required
                         >
                             <option value="">
@@ -158,6 +204,7 @@ function ReportIssue() {
                                     e.target.value
                                 )
                             }
+                            disabled={loading}
                             required
                         />
 
@@ -169,13 +216,20 @@ function ReportIssue() {
                                     e.target.files[0]
                                 )
                             }
+                            disabled={loading}
                         />
 
                         <button
                             type="button"
                             onClick={getLocation}
+                            disabled={
+                                loading ||
+                                locationLoading
+                            }
                         >
-                            Get Current Location
+                            {locationLoading
+                                ? "Getting Location..."
+                                : "Get Current Location"}
                         </button>
 
                         {latitude && longitude && (
@@ -186,11 +240,41 @@ function ReportIssue() {
                             </p>
                         )}
 
-                        <button type="submit">
-                            Submit Issue
+                        <button
+                            type="submit"
+                            disabled={loading}
+                        >
+                            {loading
+                                ? "Submitting Issue..."
+                                : "Submit Issue"}
                         </button>
 
                     </form>
+
+                    {loading && (
+                        <p
+                            style={{
+                                textAlign: "center",
+                                marginTop: "12px",
+                                color: "#555"
+                            }}
+                        >
+                            Uploading issue and image...
+                        </p>
+                    )}
+
+                    {locationLoading && (
+                        <p
+                            style={{
+                                textAlign: "center",
+                                marginTop: "12px",
+                                color: "#555"
+                            }}
+                        >
+                            Fetching your current location...
+                        </p>
+                    )}
+
                 </div>
             </div>
         </>

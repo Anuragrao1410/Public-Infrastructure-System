@@ -5,13 +5,20 @@ import { useNavigate } from "react-router-dom";
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        try {
+        setLoading(true);
+
+        window.dispatchEvent(
+        new Event("app-loading-start")
+     );
+
+    try {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_URL}/api/users/login`,
                 {
@@ -51,9 +58,16 @@ function Login() {
                 error.message ||
                 "Login failed"
             );
-        }
-    };
 
+         } finally {
+    setLoading(false);
+
+    window.dispatchEvent(
+        new Event("app-loading-stop")
+    );
+}
+    }
+    
     return (
         <div className="auth-container">
             <div className="auth-box">
@@ -71,6 +85,7 @@ function Login() {
                         onChange={(e) =>
                             setEmail(e.target.value)
                         }
+                        disabled={loading}
                         required
                     />
 
@@ -81,14 +96,28 @@ function Login() {
                         onChange={(e) =>
                             setPassword(e.target.value)
                         }
+                        disabled={loading}
                         required
                     />
 
-                    <button type="submit">
-                        Login
+                    <button
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading ? "Logging in..." : "Login"}
                     </button>
 
                 </form>
+
+                {loading && (
+                    <p style={{
+                        textAlign: "center",
+                        marginTop: "12px",
+                        color: "#555"
+                    }}>
+                        Connecting to server...
+                    </p>
+                )}
 
                 <p style={{
                     textAlign: "center",
@@ -97,10 +126,10 @@ function Login() {
                     New citizen?{" "}
 
                     <span
-                        onClick={() => navigate("/register")}
+                        onClick={() => !loading && navigate("/register")}
                         style={{
                             color: "#2563eb",
-                            cursor: "pointer",
+                            cursor: loading ? "default" : "pointer",
                             fontWeight: "600"
                         }}
                     >
@@ -115,11 +144,12 @@ function Login() {
 
                     <span
                         onClick={() =>
+                            !loading &&
                             navigate("/entrepreneur-register")
                         }
                         style={{
                             color: "#2563eb",
-                            cursor: "pointer",
+                            cursor: loading ? "default" : "pointer",
                             fontWeight: "600"
                         }}
                     >
