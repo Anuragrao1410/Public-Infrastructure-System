@@ -35,12 +35,15 @@ function ReportIssue() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const user = JSON.parse(
-            localStorage.getItem("user")
-        );
+        const user = JSON.parse(localStorage.getItem("user"));
 
         if (!user) {
             alert("Please login first.");
+            return;
+        }
+
+        if (!title || !category || !description || !latitude || !longitude) {
+            alert("Please fill all fields and get your current location.");
             return;
         }
 
@@ -59,8 +62,13 @@ function ReportIssue() {
 
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/issues",
-                formData
+                `${import.meta.env.VITE_API_URL}/api/issues`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
             );
 
             alert(response.data.message);
@@ -71,13 +79,16 @@ function ReportIssue() {
             setImage(null);
             setLatitude("");
             setLongitude("");
-
+            
         } catch (error) {
-            console.log(error);
+            console.log("ISSUE ERROR:", error);
+            console.log("RESPONSE:", error.response);
+            console.log("DATA:", error.response?.data);
 
             alert(
                 error.response?.data?.message ||
-                "Issue submission failed"
+                    error.message ||
+                    "Issue submission failed"
             );
         }
     };

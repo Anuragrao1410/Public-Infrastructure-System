@@ -13,7 +13,7 @@ function Login() {
 
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/users/login",
+                `${import.meta.env.VITE_API_URL}/api/users/login`,
                 {
                     email,
                     password
@@ -90,8 +90,12 @@ function Login() {
 
                 </form>
 
-                <p style={{ textAlign: "center", marginTop: "20px" }}>
+                <p style={{
+                    textAlign: "center",
+                    marginTop: "20px"
+                }}>
                     New citizen?{" "}
+
                     <span
                         onClick={() => navigate("/register")}
                         style={{
@@ -104,8 +108,11 @@ function Login() {
                     </span>
                 </p>
 
-                <p style={{ textAlign: "center" }}>
+                <p style={{
+                    textAlign: "center"
+                }}>
                     Women Entrepreneur?{" "}
+
                     <span
                         onClick={() =>
                             navigate("/entrepreneur-register")
