@@ -8,7 +8,12 @@ const router = express.Router();
 // Register
 router.post("/register", async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const {
+            name,
+            email,
+            password,
+            role
+        } = req.body;
 
         const existingUser = await User.findOne({ email });
 
@@ -18,13 +23,19 @@ router.post("/register", async (req, res) => {
             });
         }
 
+        if (!["citizen", "entrepreneur"].includes(role)) {
+            return res.status(400).json({
+                message: "Invalid registration role"
+            });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = new User({
             name,
             email,
             password: hashedPassword,
-            role: role || "citizen"
+            role
         });
 
         await user.save();
@@ -39,7 +50,6 @@ router.post("/register", async (req, res) => {
         });
     }
 });
-
 
 // Login
 router.post("/login", async (req, res) => {
